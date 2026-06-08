@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Equipment Hours • Single File</title>
-
 <style>
   :root {
     --bg: #0d1421;
@@ -90,11 +89,10 @@
     border: none;
   }
   .btn-primary { background: var(--accent); color: white; }
-  .btn-danger  { background: #ff4444; color: white; }
+  .btn-danger { background: #ff4444; color: white; }
   .total { font-weight: bold; color: #88ffaa; }
   .flex { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   .sheet { overflow-x: auto; max-height: 520px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 24px; }
-
   .modal {
     display: none;
     position: fixed;
@@ -122,7 +120,6 @@
     gap: 12px;
     justify-content: flex-end;
   }
-
   #loginRoot {
     display: none;
     min-height: calc(100vh - 32px);
@@ -191,9 +188,7 @@
     margin-top: 6px;
     line-height: 1.35;
   }
-
   #appRoot { display: none; }
-
   #monthTable input[type="number"]{
     -moz-appearance: textfield;
     appearance: textfield;
@@ -203,7 +198,6 @@
     -webkit-appearance: none;
     margin: 0;
   }
-
   @media (max-width: 900px) {
     body { padding: 10px; }
     .card { padding: 14px 14px; }
@@ -216,49 +210,39 @@
   }
 </style>
 </head>
-
 <body>
-
 <!-- LOGIN -->
 <div id="loginRoot" class="flex">
   <div class="login-card">
     <h1 class="login-title">Equipment Hours Log</h1>
     <p class="login-subtitle">Sign in to access the system</p>
-
     <div class="login-row">
       <label for="loginUser">User ID (Username)</label>
       <input type="text" id="loginUser" autocomplete="username" placeholder="Enter username" />
     </div>
-
     <div class="login-row">
       <label for="loginPass">Password</label>
       <input type="password" id="loginPass" autocomplete="current-password" placeholder="Enter password" />
     </div>
-
     <div class="login-row" style="display:flex; align-items:center; gap:10px; margin-top:6px;">
       <input type="checkbox" id="rememberMe" style="width:auto; max-width:none;">
       <label for="rememberMe" style="margin:0; font-weight:600; color:#c0d0ff;">Remember me</label>
     </div>
-
     <div class="login-actions">
       <button class="btn-primary" id="btnLogin" type="button">Login</button>
     </div>
-
     <div class="login-links">
       <button class="link-btn" id="btnOpenRegister" type="button">Register New User</button>
       <button class="link-btn" id="btnOpenReset" type="button">Forgot Password?</button>
     </div>
-
     <div class="small-note">
       Cloud synced worldwide.<br>
       Anyone can register to <strong>VIEW</strong>.<br>
       Only <strong>master</strong> user can edit.
     </div>
-
     <div id="loginError" class="login-error"></div>
   </div>
 </div>
-
 <!-- REGISTER MODAL -->
 <div id="registerModal" class="modal">
   <div class="modal-content">
@@ -275,7 +259,6 @@
     </div>
   </div>
 </div>
-
 <!-- RESET MODAL -->
 <div id="resetModal" class="modal">
   <div class="modal-content">
@@ -290,7 +273,6 @@
     </div>
   </div>
 </div>
-
 <!-- APP -->
 <div id="appRoot">
   <div class="card">
@@ -309,9 +291,7 @@
       </label>
       <button class="btn-danger" id="btnSignOut" type="button">Sign out</button>
     </div>
-
     <div id="toast" style="margin:12px 0; min-height:24px; color:#ffdd88;"></div>
-
     <div class="sheet">
       <table id="dailyTable">
         <thead>
@@ -329,9 +309,7 @@
         <tbody id="dailyBody"></tbody>
       </table>
     </div>
-
     <hr style="border-color:rgba(255,255,255,0.1); margin:24px 0;" />
-
     <div class="sheet">
       <table id="monthTable">
         <thead id="monthHead"></thead>
@@ -339,7 +317,6 @@
       </table>
     </div>
   </div>
-
   <!-- Add Equipment Modal -->
   <div id="addModal" class="modal">
     <div class="modal-content">
@@ -358,7 +335,6 @@
     </div>
   </div>
 </div>
-
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
@@ -367,7 +343,6 @@
     getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signOut, setPersistence, browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-
   const firebaseConfig = {
     apiKey: "AIzaSyBgQbh6pp78iwXpH9qdQk1viEgy9zAmX6A",
     authDomain: "equipment-hours-lmp.firebaseapp.com",
@@ -377,48 +352,39 @@
     messagingSenderId: "414868275365",
     appId: "1:414868275365:web:467a98dc301e3585e98d4c"
   };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
-
   window.__fb = {
     app, auth, db,
-    api: { ref, get, set, onAuthStateChanged, signInWithEmailAndPassword, 
-           createUserWithEmailAndPassword, signOut, setPersistence, 
+    api: { ref, get, set, onAuthStateChanged, signInWithEmailAndPassword,
+           createUserWithEmailAndPassword, signOut, setPersistence,
            browserLocalPersistence, browserSessionPersistence, sendPasswordResetEmail }
   };
   window.dispatchEvent(new Event("firebase-ready"));
 </script>
-
 <script>
 // Data & Config
 const equipmentGroups = [
   { name: "Generators", items: ["gen1", "gen2", "gen3", "gen4", "gen5"] },
   { name: "Compressors & Lighting", items: ["comp", "tower light"] }
 ];
-
 let monthData = {};
 let currentDate = "2026-02-26";
 let isMasterUser = false;
-
 const CLOUD_STATE_ROOT = "equipHoursState";
-
 function fb() { return window.__fb; }
 function getUid() { return fb()?.auth?.currentUser?.uid || null; }
-
 function cloudStateRef() {
   const uid = getUid();
   if (!uid) return null;
   return fb().api.ref(fb().db, `${CLOUD_STATE_ROOT}/${uid}`);
 }
-
 function saveAppState() {
   if (!isMasterUser) return;
   const r = cloudStateRef();
   if (r) fb().api.set(r, { equipmentGroups, monthData, currentDate, updatedAt: Date.now() });
 }
-
 async function loadAppState() {
   const r = cloudStateRef();
   if (!r) return false;
@@ -435,9 +401,7 @@ async function loadAppState() {
     return true;
   } catch { return false; }
 }
-
 function $(id) { return document.getElementById(id); }
-
 function showToast(msg, color = "#88ffaa") {
   const t = $("toast");
   t.textContent = msg;
@@ -445,7 +409,6 @@ function showToast(msg, color = "#88ffaa") {
   t.style.opacity = "1";
   setTimeout(() => t.style.opacity = "0", 3400);
 }
-
 function getSelectedMonthInfo() {
   const dateStr = $("workDate")?.value || currentDate || "";
   const [y, m] = dateStr.split("-").slice(0,2).map(n => parseInt(n));
@@ -455,24 +418,20 @@ function getSelectedMonthInfo() {
   const monthKey = `${year}-${String(month).padStart(2,"0")}`;
   return {monthKey, daysInMonth};
 }
-
 function ensureMonthStore(monthKey) {
   if (!monthData[monthKey]) monthData[monthKey] = {};
   return monthData[monthKey];
 }
-
 function renderMonthGrid() {
   const head = $("monthHead");
   const body = $("monthBody");
   const { monthKey, daysInMonth } = getSelectedMonthInfo();
   const DAYS = Math.min(daysInMonth, 31);
   const mStore = ensureMonthStore(monthKey);
-
   let htmlHead = "<tr><th class='sticky-left'>Equipment</th>";
   for (let d = 1; d <= DAYS; d++) htmlHead += `<th>${d}</th>`;
   htmlHead += "<th class='total'>Total</th></tr>";
   head.innerHTML = htmlHead;
-
   let htmlBody = "";
   equipmentGroups.forEach(group => {
     htmlBody += `<tr class="category-header"><td colspan="${DAYS + 2}">${group.name}</td></tr>`;
@@ -489,7 +448,6 @@ function renderMonthGrid() {
   });
   body.innerHTML = htmlBody;
 }
-
 function renderDailyEntry() {
   const body = $("dailyBody");
   const date = $("workDate").value || currentDate;
@@ -508,7 +466,6 @@ function renderDailyEntry() {
   });
   body.innerHTML = html;
 }
-
 function applyReadOnlyMode() {
   if (isMasterUser) return;
   document.querySelectorAll('#btnSaveDay, #btnSaveAll, #btnAddEquipment, #fileImportCSV, .btn-delete, .hr-service, .hr-service-date, .initial, .final, #newEquipName, #newEquipCategory, #btnConfirmAdd').forEach(el => {
@@ -520,7 +477,6 @@ function applyReadOnlyMode() {
   document.getElementById("workDate").disabled = false;
   showToast("👁️ View Only Mode - Only master can edit", "#ffaa44");
 }
-
 // Updated Export CSV - Includes last day entry as Last Hour
 function exportMonthlyCSV() {
   const allEquip = equipmentGroups.flatMap(g => g.items);
@@ -528,25 +484,19 @@ function exportMonthlyCSV() {
     showToast("No equipment to export", "#ffaa44");
     return;
   }
-
   const { monthKey, daysInMonth } = getSelectedMonthInfo();
   const DAYS = Math.min(daysInMonth, 31);
   const mStore = ensureMonthStore(monthKey);
-
   let headers = ["Equipment"];
   for (let d = 1; d <= DAYS; d++) headers.push(String(d));
   headers.push("Total", "HourLast", "Hr Service Date", "Hr Service");
-
   let csv = headers.join(",") + "\n";
-
   allEquip.forEach(eq => {
     let total = 0;
     let hourLast = "";
     let latestServiceDate = "";
     let latestServiceHours = "";
-
     const row = [eq];
-
     // Daily hours
     for (let d = 1; d <= DAYS; d++) {
       const val = mStore[d]?.[eq];
@@ -556,25 +506,20 @@ function exportMonthlyCSV() {
         const num = Number(val);
         row.push(isNaN(num) ? "" : num);
         total += num || 0;
-        hourLast = num;   // Last day entry becomes HourLast
+        hourLast = num; // Last day entry becomes HourLast
       }
     }
-
     row.push(total.toFixed(1));
     row.push(hourLast === "" ? "" : Number(hourLast));
-
     // Service info (from day 1 or latest)
     const sd = mStore[1]?.[eq + "_serviceDate"];
     const sh = mStore[1]?.[eq + "_hrService"];
     if (sd) latestServiceDate = sd;
     if (sh !== undefined && sh !== "") latestServiceHours = Number(sh);
-
     row.push(latestServiceDate || "");
     row.push(latestServiceHours === "" ? "" : latestServiceHours);
-
     csv += row.join(",") + "\n";
   });
-
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -582,30 +527,24 @@ function exportMonthlyCSV() {
   link.download = `equipment-hours-${monthKey}.csv`;
   link.click();
   URL.revokeObjectURL(url);
-
   showToast("Monthly CSV exported with last hour entry", "#44cc88");
 }
-
 // Auth (unchanged)
 (() => {
   function unameToEmail(username) {
     const safe = username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "_");
     return `${safe}@equip-hours.local`;
   }
-
   function showLogin(message = "") {
     $("loginRoot").style.display = "flex";
     $("appRoot").style.display = "none";
     if (message) $("loginError").textContent = message;
   }
-
   function showApp() {
     $("loginRoot").style.display = "none";
     $("appRoot").style.display = "block";
-
     const username = ($("loginUser").value || localStorage.getItem("lastUsername") || "").toLowerCase().trim();
     isMasterUser = username === "master";
-
     loadAppState().then(() => {
       renderDailyEntry();
       renderMonthGrid();
@@ -613,10 +552,8 @@ function exportMonthlyCSV() {
     });
     localStorage.setItem("lastUsername", username);
   }
-
   function initAuth() {
     fb().api.onAuthStateChanged(fb().auth, user => user ? showApp() : showLogin());
-
     $("btnLogin").onclick = async () => {
       const u = $("loginUser").value.trim().toLowerCase();
       const p = $("loginPass").value;
@@ -630,7 +567,6 @@ function exportMonthlyCSV() {
         showApp();
       } catch { err.textContent = "Invalid username or password"; }
     };
-
     $("btnOpenRegister").onclick = () => $("registerModal").style.display = "flex";
     $("btnCancelRegister").onclick = () => $("registerModal").style.display = "none";
     $("btnConfirmRegister").onclick = async () => {
@@ -643,7 +579,6 @@ function exportMonthlyCSV() {
         showLogin("Account created! Please login.");
       } catch { $("regMsg").textContent = "Registration failed"; }
     };
-
     $("btnOpenReset").onclick = () => {
       $("resetUser").value = "";
       $("resetMsg").textContent = "";
@@ -660,18 +595,14 @@ function exportMonthlyCSV() {
         msg.textContent = "Reset link sent! Check your email.";
       } catch { msg.textContent = "Error sending reset link."; }
     };
-
     $("btnSignOut").onclick = () => fb().api.signOut(fb().auth);
   }
-
   window.addEventListener("firebase-ready", initAuth);
 })();
-
 // Initial Render
 renderDailyEntry();
 renderMonthGrid();
 $("btnExportCSV").onclick = exportMonthlyCSV;
 </script>
-
 </body>
 </html>
